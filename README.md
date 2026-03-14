@@ -1,247 +1,181 @@
 # Phoenix Eye
 
-Phoenix Eye is an AI-powered road hazard detection system designed to identify roadkill incidents and assist authorities in responding quickly to wildlife-related road hazards.
+Phoenix Eye is an intelligent road safety system designed to detect and manage roadkill incidents using Artificial Intelligence, citizen reporting, and drone-assisted response.
 
-The system combines Artificial Intelligence, a citizen reporting mobile application, and a monitoring dashboard used by authorities to detect, verify, and manage road incidents efficiently.
-
----
-
-# Problem
-
-Roadkill incidents on highways and roads can:
-
-- Cause serious traffic accidents
-- Endanger drivers
-- Harm wildlife populations
-- Take time for authorities to detect and respond
-
-Currently, there is no automated system that helps detect and manage these incidents in real time.
-
-Phoenix Eye aims to solve this problem using AI and a connected reporting system.
+The platform enables citizens to report roadkill through a mobile application, while authorities monitor and manage incidents through a web-based control center. AI detection assists in identifying roadkill from images, and drones can be deployed to investigate or respond to incidents.
 
 ---
 
-# Solution Overview
+# Project Overview
 
-Phoenix Eye provides a full ecosystem consisting of:
+Roadkill on highways is a significant problem that can:
 
-1. **Citizen Mobile Application**
-2. **AI Detection System**
-3. **Backend API**
-4. **Authority Dashboard**
+• Endanger drivers  
+• Cause traffic accidents  
+• Harm wildlife populations  
+• Delay response from authorities  
 
-Citizens can report incidents using the mobile app, while AI detection helps analyze images to determine whether roadkill is present.
+Phoenix Eye aims to solve this problem by combining:
 
-Authorities can then verify the report and dispatch drones if needed.
-
----
-
-# System Architecture
-
-```
-Citizen Mobile App
-        │
-        │ Submit Report (Image + Location)
-        ▼
-Backend API (Node.js)
-        │
-        │ Store Report
-        ▼
-PostgreSQL Database
-        │
-        │
-        ├── AI Detection Service
-        │       (Python + YOLO)
-        │
-        ▼
-Admin Dashboard (React)
-        │
-        │ Verify Report
-        ▼
-Drone Deployment
-```
+• Citizen reporting  
+• AI-based image detection  
+• Real-time monitoring dashboard  
+• Drone deployment system  
 
 ---
 
-# Project Components
+# System Components
 
-## 1 Mobile Application
+The system consists of three main components:
 
-Developed using **Flutter**.
+### 1. Mobile Application
+Used by citizens to report roadkill incidents.
 
 Features:
-
 - User registration
-- Image upload (camera or gallery)
-- GPS location detection
-- Map location selection
-- Animal type selection
-- Report submission
-- Confirmation screen
+- Photo upload
+- GPS location capture
+- Roadkill reporting
 
-The mobile application allows citizens to easily report roadkill incidents.
+Technology:
+- Flutter
 
 ---
 
-## 2 AI Detection System
+### 2. Web Dashboard (Control Center)
 
-The AI component detects roadkill using computer vision.
+Used by authorities to monitor and manage reports.
 
-Technology used:
+Features:
+- Report management
+- Drone management
+- Incident verification
+- Analytics dashboard
+- Status tracking
 
+Technology:
+- React (Frontend)
+- Node.js + Express (Backend)
+
+---
+
+### 3. AI Detection System
+
+An AI model trained to detect roadkill from images.
+
+Technology:
 - Python
-- YOLOv8 (Ultralytics)
+- YOLOv8
+- Ultralytics
 - CUDA GPU acceleration
-- Label Studio for annotation
 
 Dataset:
-
-- 146 labeled images of roadkill
+- 146 labeled roadkill images
 - Bounding box annotations in YOLO format
-- Various road environments and lighting conditions
 
-Current status:
+The current model is functional but still being improved to reduce false detections.
 
-The model is trained and functional but still produces some false positives. Further dataset expansion and training improvements are planned.
-
-For the demo version, **Gemini AI analysis is used to assist detection**, while the YOLO model continues to be improved.
+For demo purposes, Gemini Vision API can also be used to analyze images.
 
 ---
 
-## 3 Backend System
+# Dashboard Interface
 
-The backend handles all system logic and APIs.
+### Admin Login
 
-Technology:
-
-- Node.js
-- Express.js
-- REST API architecture
-
-Main responsibilities:
-
-- User authentication
-- Report submission
-- Image upload
-- Status management
-- Drone assignment
-- Data communication between AI and dashboard
+<img src="docs/images/login.png" width="600"/>
 
 ---
 
-## 4 Database
+### Control Center Overview
 
-Database used:
+<img src="docs/images/dashboard.png" width="900"/>
 
-PostgreSQL
+Displays:
 
-Stored data includes:
-
-- Users
-- Reports
-- Images
-- GPS locations
-- Drone information
-- Report status
+• Total reports  
+• Total drones  
+• Online/offline drones  
+• Recent reports  
 
 ---
 
-## 5 Authority Dashboard
+### Reports Management
 
-The dashboard allows authorities to monitor and manage reports.
+<img src="docs/images/reports.png" width="900"/>
 
-Technology:
+Authorities can:
 
-- React.js
-- Tailwind CSS
-- Axios
+• View citizen reports  
+• Verify incidents  
+• Assign drones  
+• Mark reports as removed  
 
-Dashboard features:
+Report statuses include:
 
-- Reports management
-- Status verification
-- Drone assignment
-- Location map visualization
-- Analytics dashboard
-- Incident tracking
+- Pending
+- Verified
+- Assigned
+- Removed
 
 ---
 
-# Current Development Status
+### Drone Management
 
-Completed:
+<img src="docs/images/drones.png" width="900"/>
 
-- Mobile application interface
-- Report submission system
-- Web dashboard interface
-- Backend API structure
-- Database schema
-- Initial AI model training
-- System integration architecture
+Allows administrators to:
 
-Pending improvements:
+• Register drones  
+• Monitor drone status  
+• Launch drones  
+• Assign drones to reports
 
-- AI model accuracy improvement
-- Larger dataset collection
-- Full AI integration into backend
-- Real-time notifications
-- Drone system integration
+Drone states include:
+
+- Available
+- Assigned
+- Offline
+
+---
+
+### Analytics Dashboard
+
+<img src="docs/images/analytics.png" width="900"/>
+
+Provides:
+
+• Report trends  
+• Status distribution  
+• Heatmap of locations  
 
 ---
 
 # Technology Stack
 
-Frontend (Dashboard)
-
-- React.js
-- Tailwind CSS
+### Frontend
+- React
+- Vite
+- TailwindCSS
 - Axios
 
-Backend
-
+### Backend
 - Node.js
 - Express.js
+- REST API
 
-Mobile App
-
-- Flutter
-
-AI / Machine Learning
-
-- Python
-- YOLOv8
-- Label Studio
-- CUDA
-
-Database
-
+### Database
 - PostgreSQL
 
----
+### Mobile App
+- Flutter
 
-# Future Work
-
-Planned improvements include:
-
-- Expanding the roadkill dataset
-- Improving YOLO detection accuracy
-- Integrating the trained AI model into the backend
-- Implementing real-time report notifications
-- Integrating drone deployment systems
+### AI Detection
+- Python
+- YOLOv8
+- Ultralytics
+- Label Studio
 
 ---
 
-# Team
-
-Phoenix Eye Development Team
-
-Graduation Project  
-Faculty of Computing and Information Technology
-
-King Abdulaziz University
-
----
-
-# License
-
-This project is developed for academic and research purposes.
+# Project Structure
