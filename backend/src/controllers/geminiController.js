@@ -1,12 +1,8 @@
 const fs = require("fs");
 const path = require("path");
-const mime = require("mime-types");
-const { GoogleGenAI } = require("@google/genai");
+const FormData = require("form-data");
+const axios = require("axios");
 const Report = require("../models/Report");
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
 
 exports.analyzeReportWithGemini = async (req, res) => {
   try {
@@ -21,82 +17,71 @@ exports.analyzeReportWithGemini = async (req, res) => {
       return res.status(400).json({ error: "This report has no image" });
     }
 
-    // نفترض أن image_url عندكم مثل:
-    // /uploads/reports/filename.jpg
-    const relativePath = report.image_url.replace(/^\/+/, "");
-    const absolutePath = path.join(process.cwd(), relativePath);
+    let aiResponse;
 
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ error: "Image file not found on server" });
-    }
+    if (report.image_url.startsWith("/uploads")) {
+      const relativePath = report.image_url.replace(/^\/+/, "");
+      const absolutePath = path.join(process.cwd(), relativePath);
 
-    const imageBuffer = fs.readFileSync(absolutePath);
-    const mimeType = mime.lookup(absolutePath) || "image/jpeg";
-    const base64Image = imageBuffer.toString("base64");
+      if (!fs.existsSync(absolutePath)) {
+        return res.status(404).json({ error: "Image file not found on server" });
+      }
 
-    const prompt = `
-You are analyzing a road image for a graduation-project demo called Phoenix Eye.
+      const form = new FormData();
+      form.append("file", fs.createReadStream(absolutePath));
 
-Task:
-Determine whether the image likely contains a DEAD animal (roadkill) or NOT.
+      aiResponse = await axios.post("http://localhost:8000/predict", form, {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
+      });
+    } else {
+      const imageResponse = await axios.get(report.image_url, {
+        responseType: "stream",
+      });
 
-Return ONLY valid JSON in this exact format:
-{
-  "is_dead_animal": true,
-  "confidence": 0.91,
-  "animal_detected": true,
-  "label": "dead animal",
-  "explanation": "short explanation"
-}
+      const form = new FormData();
+      form.append("file", imageResponse.data, {
+        filename: "report.jpg",
+        contentType: imageResponse.headers["content-type"] || "image/jpeg",
+      });
 
-Rules:
-- confidence must be between 0 and 1
-- if you are unsure, set lower confidence
-- do not include markdown
-- do not include extra text
-- focus only on whether the visible animal appears dead on the road
-`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              inlineData: {
-                mimeType,
-                data: base64Image,
-              },
-            },
-            { text: prompt },
-          ],
-        },
-      ],
-    });
-
-    let text = response.text || "";
-
-    // تنظيف احتياطي لو رجع fenced JSON
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch (parseError) {
-      return res.status(500).json({
-        error: "Gemini returned non-JSON response",
-        raw: text,
+      aiResponse = await axios.post("http://localhost:8000/predict", form, {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
       });
     }
 
+    const aiData = aiResponse.data || {};
+    const detections = aiData.detections || [];
+    const topLabel = detections.length > 0 ? detections[0].label : null;
+
+    await report.update({
+      ai_total_detections: aiData.total_detections ?? 0,
+      ai_max_confidence: aiData.max_confidence ?? null,
+      ai_top_label: topLabel,
+      ai_annotated_image_base64: aiData.annotated_image_base64 || null,
+      ai_result_json: aiData,
+    });
+
+    const updatedReport = await Report.findByPk(id);
+
     return res.json({
-      message: "Gemini analysis completed",
-      report_id: report.id,
-      result: parsed,
+      message: "AI analysis completed and saved",
+      report_id: updatedReport.id,
+      result: {
+        success: updatedReport.ai_result_json?.success ?? true,
+        total_detections: updatedReport.ai_total_detections ?? 0,
+        max_confidence: updatedReport.ai_max_confidence ?? null,
+        detections: updatedReport.ai_result_json?.detections || [],
+        annotated_image_base64: updatedReport.ai_annotated_image_base64 || null,
+        top_label: updatedReport.ai_top_label || null,
+      },
     });
   } catch (error) {
-    console.error("Gemini analysis error:", error);
-    return res.status(500).json({ error: "Gemini analysis failed" });
+    console.error("AI analysis error:", error?.response?.data || error.message);
+    return res.status(500).json({
+      error: "AI analysis failed",
+      details: error?.response?.data || error.message,
+    });
   }
 };

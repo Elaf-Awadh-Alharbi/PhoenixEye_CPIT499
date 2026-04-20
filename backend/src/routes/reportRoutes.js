@@ -4,7 +4,7 @@ const { uploadReportImage } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
-// 👇 هذا خاص بالمواطنين (بدون درون توكن)
+// هذا خاص بالمواطنين (بدون درون توكن)
 // يستقبل صورة عبر multipart/form-data
 router.post(
   "/",

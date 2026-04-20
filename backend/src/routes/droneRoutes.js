@@ -13,11 +13,11 @@ const { uploadReportImage } = require("../middleware/uploadMiddleware");
 // تسجيل درون
 router.post("/register", registerDrone);
 
-// 🔥 رفع بلاغ من الدرون مع صورة
+// رفع بلاغ من الدرون مع صورة
 router.post(
   "/report",
   verifyDroneToken,
-  uploadReportImage.single("image"), // 👈 اسم الحقل = image
+  uploadReportImage.single("image"), 
   createDroneReport
 );
 

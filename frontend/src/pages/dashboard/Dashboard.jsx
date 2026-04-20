@@ -1,118 +1,388 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [liveData, setLiveData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchDashboard = async () => {
+  const fetchAll = async () => {
     try {
-      const res = await api.get("/dashboard/summary");
-      setData(res.data);
+      const [dashboardRes, liveRes] = await Promise.all([
+        api.get("/dashboard/summary"),
+        api.get("/drones/live"),
+      ]);
+
+      setData(dashboardRes.data);
+      setLiveData(liveRes.data);
     } catch (err) {
       console.error("Dashboard error:", err);
-    }
-  };
-
-  const fetchLiveDrones = async () => {
-    try {
-      const res = await api.get("/drones/live");
-      setLiveData(res.data);
-    } catch (err) {
-      console.error("Live drones error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // أول تحميل
-    fetchDashboard();
-    fetchLiveDrones();
+    fetchAll();
 
-    // Auto refresh كل 5 ثواني
     const interval = setInterval(() => {
-      fetchDashboard();
-      fetchLiveDrones();
+      fetchAll();
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  if (!data || !liveData) return <p>Loading...</p>;
+  const statusMap = useMemo(() => {
+    const map = {
+      PENDING: 0,
+      VERIFIED: 0,
+      ASSIGNED: 0,
+      REMOVED: 0,
+    };
+
+    if (data?.statusCounts?.length) {
+      data.statusCounts.forEach((item) => {
+        map[item.status] = Number(item.count);
+      });
+    }
+
+    return map;
+  }, [data]);
+
+  const criticalCount =
+    liveData?.drones?.filter((drone) => drone.is_critical).length || 0;
+
+  const recentReports = data?.recentReports || [];
+  const liveDrones = liveData?.drones || [];
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-emerald-400 mb-6">
-        Control Center Overview
-      </h1>
-
-      <div className="grid grid-cols-4 gap-6 mb-10">
-        <Card title="Total Reports" value={data.totalReports} />
-        <Card title="Total Drones" value={data.totalDrones} />
-        <Card title="Online Drones" value={liveData.online} />
-        <Card title="Offline Drones" value={liveData.offline} />
-      </div>
-
-      {/* Status Distribution */}
-      <div className="bg-slate-800 p-5 rounded-xl mb-10">
-        <h2 className="mb-4 text-lg">Reports by Status</h2>
-        {data.statusCounts.map((s) => (
-          <p key={s.status}>
-            {s.status} : {s.count}
-          </p>
-        ))}
-      </div>
-
-      {/* Live Drones Table */}
-      <div className="bg-slate-800 p-5 rounded-xl mb-10">
-        <h2 className="mb-4 text-lg">Live Drones</h2>
-        {liveData.drones.map((drone) => (
-          <div
-            key={drone.id}
-            className="border-b border-slate-700 py-2 flex justify-between"
-          >
-            <span>{drone.name}</span>
-
-            <span>
-              {drone.is_online ? "🟢 Online" : "⚫ Offline"}
-            </span>
-
-            <span>
-              Battery: {drone.battery ?? 0}%
-              {drone.is_critical && (
-                <span className="text-red-500 ml-2">
-                  ⚠ Low
-                </span>
-              )}
-            </span>
+    <div className="space-y-8">
+      <section className="rounded-3xl border border-[#22365f] bg-gradient-to-r from-[#0f1b34] to-[#122447] p-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.22em] text-[#38bdf8]">
+              Operations Overview
+            </p>
+            <h2 className="mt-2 text-3xl font-bold text-white">
+              Phoenix Eye Control Center
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              Monitor incident activity, drone availability, and response readiness
+              across the system from one unified command dashboard.
+            </p>
           </div>
-        ))}
-      </div>
 
-      {/* Recent Reports */}
-      <div className="bg-slate-800 p-5 rounded-xl">
-        <h2 className="mb-4 text-lg">Recent Reports</h2>
-        {data.recentReports.map((r) => {
-          const dateStr = r.createdAt || r.created_at; // يدعم الاثنين
-          const dateLabel = dateStr ? new Date(dateStr).toLocaleString() : "—";
-
-          return (
-          <div key={r.id} className="border-b border-slate-700 py-2">
-          {r.status} — {dateLabel}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <QuickStat label="Pending" value={statusMap.PENDING} tone="warning" />
+            <QuickStat label="Verified" value={statusMap.VERIFIED} tone="success" />
+            <QuickStat label="Assigned" value={statusMap.ASSIGNED} tone="info" />
+            <QuickStat label="Removed" value={statusMap.REMOVED} tone="danger" />
+          </div>
         </div>
-        );
-        })}
-      </div>
+      </section>
+
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          title="Total Reports"
+          value={data?.totalReports ?? 0}
+          subtitle="All recorded incidents"
+          accent="emerald"
+        />
+        <KpiCard
+          title="Total Drones"
+          value={data?.totalDrones ?? 0}
+          subtitle="Fleet inventory"
+          accent="sky"
+        />
+        <KpiCard
+          title="Online Drones"
+          value={liveData?.online ?? 0}
+          subtitle="Actively connected now"
+          accent="green"
+        />
+        <KpiCard
+          title="Critical Battery"
+          value={criticalCount}
+          subtitle="Drones below 20%"
+          accent="amber"
+        />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel
+          title="Report Status Distribution"
+          subtitle="Live breakdown of incident workflow states."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <StatusCard label="Pending Review" value={statusMap.PENDING} color="yellow" />
+            <StatusCard label="Verified" value={statusMap.VERIFIED} color="green" />
+            <StatusCard label="Assigned" value={statusMap.ASSIGNED} color="blue" />
+            <StatusCard label="Removed" value={statusMap.REMOVED} color="red" />
+          </div>
+        </Panel>
+
+        <Panel
+          title="Operational Alerts"
+          subtitle="High-priority issues that may need action."
+        >
+          <div className="space-y-3">
+            <AlertRow
+              tone={criticalCount > 0 ? "warning" : "neutral"}
+              title="Low Battery Drones"
+              text={
+                criticalCount > 0
+                  ? `${criticalCount} drone(s) require charging attention.`
+                  : "No critical battery alerts at the moment."
+              }
+            />
+            <AlertRow
+              tone={(liveData?.offline ?? 0) > 0 ? "danger" : "neutral"}
+              title="Offline Fleet"
+              text={
+                (liveData?.offline ?? 0) > 0
+                  ? `${liveData?.offline} drone(s) are currently offline.`
+                  : "All active fleet connections look healthy."
+              }
+            />
+            <AlertRow
+              tone={statusMap.PENDING > 0 ? "info" : "neutral"}
+              title="Pending Reports"
+              text={
+                statusMap.PENDING > 0
+                  ? `${statusMap.PENDING} report(s) are waiting for review.`
+                  : "No pending reports waiting in the queue."
+              }
+            />
+          </div>
+        </Panel>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Panel
+          title="Live Drone Activity"
+          subtitle="Real-time snapshot of fleet connectivity and power state."
+        >
+          {liveDrones.length === 0 ? (
+            <EmptyState
+              title="No drones available"
+              text="No fleet activity is visible yet. Add a drone or wait for heartbeat updates."
+            />
+          ) : (
+            <div className="space-y-3">
+              {liveDrones.slice(0, 6).map((drone) => (
+                <div
+                  key={drone.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-[#22365f] bg-[#111d37] px-4 py-4 md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-white">{drone.name}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {drone.last_seen_at
+                        ? `Last seen ${new Date(drone.last_seen_at).toLocaleString()}`
+                        : "No heartbeat received yet"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Pill tone={drone.is_online ? "success" : "neutral"}>
+                      {drone.is_online ? "Online" : "Offline"}
+                    </Pill>
+                    <Pill tone="info">{drone.status || "UNKNOWN"}</Pill>
+                    <Pill tone={drone.is_critical ? "danger" : "neutral"}>
+                      Battery {drone.battery ?? 0}%
+                    </Pill>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <Panel
+          title="Recent Reports"
+          subtitle="Latest incidents added to the system."
+        >
+          {recentReports.length === 0 ? (
+            <EmptyState
+              title="No reports yet"
+              text="Recent incident activity will appear here once reports are submitted."
+            />
+          ) : (
+            <div className="space-y-3">
+              {recentReports.map((report) => {
+                const dateStr = report.createdAt || report.created_at;
+                const dateLabel = dateStr
+                  ? new Date(dateStr).toLocaleString()
+                  : "—";
+
+                return (
+                  <div
+                    key={report.id}
+                    className="rounded-2xl border border-[#22365f] bg-[#111d37] px-4 py-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-white">
+                          Incident #{report.id.slice(0, 8)}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-400">
+                          {Number(report.latitude).toFixed(3)},{" "}
+                          {Number(report.longitude).toFixed(3)}
+                        </p>
+                      </div>
+
+                      <Pill
+                        tone={
+                          report.status === "PENDING"
+                            ? "warning"
+                            : report.status === "VERIFIED"
+                            ? "success"
+                            : report.status === "ASSIGNED"
+                            ? "info"
+                            : "danger"
+                        }
+                      >
+                        {report.status}
+                      </Pill>
+                    </div>
+
+                    <p className="mt-3 text-xs text-slate-500">{dateLabel}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Panel>
+      </section>
     </div>
   );
 }
 
-function Card({ title, value }) {
+function KpiCard({ title, value, subtitle, accent = "emerald" }) {
+  const accents = {
+    emerald: "from-emerald-400/20 to-emerald-500/5 border-emerald-400/20",
+    sky: "from-sky-400/20 to-sky-500/5 border-sky-400/20",
+    green: "from-green-400/20 to-green-500/5 border-green-400/20",
+    amber: "from-amber-400/20 to-amber-500/5 border-amber-400/20",
+  };
+
   return (
-    <div className="bg-slate-800 p-5 rounded-xl shadow-lg">
-      <h3 className="text-sm text-gray-400">{title}</h3>
-      <p className="text-3xl font-bold text-emerald-400 mt-2">
-        {value}
-      </p>
+    <div
+      className={`rounded-3xl border bg-gradient-to-br p-5 shadow-[0_16px_40px_rgba(2,8,23,0.35)] ${accents[accent]}`}
+    >
+      <p className="text-sm text-slate-400">{title}</p>
+      <p className="mt-3 text-3xl font-bold text-white">{value}</p>
+      <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+    </div>
+  );
+}
+
+function QuickStat({ label, value, tone = "info" }) {
+  const tones = {
+    warning: "border-amber-400/20 bg-amber-400/10 text-amber-300",
+    success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+    info: "border-sky-400/20 bg-sky-400/10 text-sky-300",
+    danger: "border-red-400/20 bg-red-400/10 text-red-300",
+  };
+
+  return (
+    <div className={`rounded-2xl border px-4 py-3 ${tones[tone]}`}>
+      <p className="text-xs uppercase tracking-wide">{label}</p>
+      <p className="mt-2 text-2xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function Panel({ title, subtitle, children }) {
+  return (
+    <div className="rounded-3xl border border-[#22365f] bg-[#0f1b34] p-5 shadow-[0_16px_40px_rgba(2,8,23,0.35)]">
+      <div className="mb-5">
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function StatusCard({ label, value, color = "blue" }) {
+  const styles = {
+    yellow: "border-amber-400/20 bg-amber-400/10 text-amber-300",
+    green: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+    blue: "border-sky-400/20 bg-sky-400/10 text-sky-300",
+    red: "border-red-400/20 bg-red-400/10 text-red-300",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 ${styles[color]}`}>
+      <p className="text-sm">{label}</p>
+      <p className="mt-3 text-3xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function AlertRow({ title, text, tone = "neutral" }) {
+  const tones = {
+    neutral: "border-[#22365f] bg-[#111d37]",
+    warning: "border-amber-400/20 bg-amber-400/10",
+    danger: "border-red-400/20 bg-red-400/10",
+    info: "border-sky-400/20 bg-sky-400/10",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
+      <p className="font-medium text-white">{title}</p>
+      <p className="mt-1 text-sm text-slate-300">{text}</p>
+    </div>
+  );
+}
+
+function Pill({ children, tone = "neutral" }) {
+  const tones = {
+    neutral: "bg-slate-700/60 text-slate-200",
+    success: "bg-emerald-400/15 text-emerald-300",
+    warning: "bg-amber-400/15 text-amber-300",
+    danger: "bg-red-400/15 text-red-300",
+    info: "bg-sky-400/15 text-sky-300",
+  };
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${tones[tone]}`}>
+      {children}
+    </span>
+  );
+}
+
+function EmptyState({ title, text }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-[#2a426f] bg-[#111d37] px-5 py-10 text-center">
+      <p className="text-base font-semibold text-white">{title}</p>
+      <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">{text}</p>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="h-36 rounded-3xl bg-[#101d38]" />
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-32 rounded-3xl bg-[#101d38]" />
+        ))}
+      </div>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="h-72 rounded-3xl bg-[#101d38]" />
+        <div className="h-72 rounded-3xl bg-[#101d38]" />
+      </div>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="h-80 rounded-3xl bg-[#101d38]" />
+        <div className="h-80 rounded-3xl bg-[#101d38]" />
+      </div>
     </div>
   );
 }

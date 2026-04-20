@@ -2,7 +2,7 @@ const { sequelize } = require("../config/database");
 
 exports.getDashboardSummary = async (req, res) => {
   try {
-    // إجمالي البلاغات (بدون المحذوفة Soft Delete)
+    
     const totalReports = await sequelize.query(
       `SELECT COUNT(*) FROM roadkill_reports WHERE deleted_at IS NULL`,
       { type: sequelize.QueryTypes.SELECT }
@@ -45,8 +45,7 @@ exports.getDashboardSummary = async (req, res) => {
       createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
     }));
 
-    // للتأكد السريع (احذفها بعد الاختبار)
-    // console.log("recentReports sample:", recentReports[0]);
+    
 
     res.json({
       totalReports: parseInt(totalReports[0].count, 10),

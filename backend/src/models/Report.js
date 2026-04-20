@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
-
 const Report = sequelize.define(
   "Report",
   {
@@ -34,11 +33,32 @@ const Report = sequelize.define(
       type: DataTypes.ENUM("DRONE", "CITIZEN"),
       allowNull: false,
     },
+
+    ai_total_detections: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    ai_max_confidence: {
+      type: DataTypes.DOUBLE,
+      allowNull: true,
+    },
+    ai_top_label: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    ai_annotated_image_base64: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true,
+    },
+    ai_result_json: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
   },
   {
     tableName: "roadkill_reports",
     timestamps: true,
-    paranoid: true, // لأنه عندك deleted_at
+    paranoid: true,
     underscored: true,
   }
 );

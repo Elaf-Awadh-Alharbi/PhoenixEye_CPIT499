@@ -71,7 +71,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 exports.updateReportStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, drone_id } = req.body; // ✅ أضفنا drone_id
+    const { status, drone_id } = req.body; // 
 
     const allowed = ["PENDING", "VERIFIED", "ASSIGNED", "REMOVED"];
     if (!allowed.includes(status)) {
