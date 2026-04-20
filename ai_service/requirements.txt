@@ -3,3 +3,5 @@ uvicorn
 python-multipart
 ultralytics
 pillow
+opencv-python-headless
+numpy
