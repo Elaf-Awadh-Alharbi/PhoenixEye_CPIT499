@@ -30,7 +30,7 @@ exports.analyzeReportWithGemini = async (req, res) => {
       const form = new FormData();
       form.append("file", fs.createReadStream(absolutePath));
 
-      aiResponse = await axios.post("http://localhost:8000/predict", form, {
+      aiResponse = await axios.post("https://phoenixeye-cpit499-1.onrender.com/predict", form, {
         headers: form.getHeaders(),
         maxBodyLength: Infinity,
       });
@@ -45,7 +45,7 @@ exports.analyzeReportWithGemini = async (req, res) => {
         contentType: imageResponse.headers["content-type"] || "image/jpeg",
       });
 
-      aiResponse = await axios.post("http://localhost:8000/predict", form, {
+      aiResponse = await axios.post("https://phoenixeye-cpit499-1.onrender.com/predict", form, {
         headers: form.getHeaders(),
         maxBodyLength: Infinity,
       });
