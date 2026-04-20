@@ -9,7 +9,7 @@ const items = [
   { to: "/analytics", label: "Analytics", icon: "◌" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }) {
   const location = useLocation();
   const { user } = useAuth();
 
@@ -22,9 +22,9 @@ export default function Sidebar() {
     ].join(" ");
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-[#1f3157] bg-[#0c1730] px-5 py-6 md:flex md:flex-col">
-      <div className="mb-8 flex flex-col items-start">
-        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-[#2a3f6c] bg-white p-2 shadow-[0_10px_30px_rgba(2,8,23,0.35)]">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-[#1f3157] bg-[#0c1730] px-4 py-5 sm:px-5 sm:py-6">
+      <div className="mb-6 flex flex-col items-start sm:mb-8">
+        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[#2a3f6c] bg-white p-2 shadow-[0_10px_30px_rgba(2,8,23,0.35)] sm:h-24 sm:w-24">
           <img
             src={logo}
             alt="Phoenix Eye"
@@ -33,7 +33,7 @@ export default function Sidebar() {
         </div>
 
         <div className="mt-4">
-          <p className="text-[1.9rem] font-bold leading-tight text-emerald-300">
+          <p className="text-[1.5rem] font-bold leading-tight text-emerald-300 sm:text-[1.9rem]">
             Phoenix Eye
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-400">
@@ -46,7 +46,12 @@ export default function Sidebar() {
 
       <nav className="space-y-2">
         {items.map((item) => (
-          <Link key={item.to} to={item.to} className={linkClass(item.to)}>
+          <Link
+            key={item.to}
+            to={item.to}
+            className={linkClass(item.to)}
+            onClick={onNavigate}
+          >
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-sm">
               {item.icon}
             </span>

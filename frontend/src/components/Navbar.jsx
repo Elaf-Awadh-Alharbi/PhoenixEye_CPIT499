@@ -21,7 +21,7 @@ const pageMeta = {
   },
 };
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }) {
   const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -44,45 +44,59 @@ export default function Navbar() {
           : "border-slate-200 bg-white/95"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-4 md:px-8">
-        <div className="min-w-0">
-          <p
-            className={`text-xs font-medium uppercase tracking-[0.22em] ${
-              isDark ? "text-[#38bdf8]" : "text-blue-600"
+      <div className="mx-auto flex w-full max-w-7xl items-start justify-between gap-3 px-4 py-3 sm:px-5 md:px-6 xl:px-8">
+        <div className="flex min-w-0 items-start gap-3">
+          <button
+            onClick={onMenuClick}
+            className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border lg:hidden ${
+              isDark
+                ? "border-[#263b67] bg-[#111f3c] text-slate-100"
+                : "border-slate-300 bg-white text-slate-900"
             }`}
+            aria-label="Open menu"
           >
-            Phoenix Eye
-          </p>
-          <h1
-            className={`truncate text-xl font-semibold ${
-              isDark ? "text-white" : "text-slate-900"
-            }`}
-          >
-            {current.title}
-          </h1>
-          <p
-            className={`mt-1 hidden text-sm md:block ${
-              isDark ? "text-slate-400" : "text-slate-500"
-            }`}
-          >
-            {current.subtitle}
-          </p>
+            ☰
+          </button>
+
+          <div className="min-w-0">
+            <p
+              className={`text-[11px] font-medium uppercase tracking-[0.22em] sm:text-xs ${
+                isDark ? "text-[#38bdf8]" : "text-blue-600"
+              }`}
+            >
+              Phoenix Eye
+            </p>
+            <h1
+              className={`truncate text-lg font-semibold sm:text-xl ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            >
+              {current.title}
+            </h1>
+            <p
+              className={`mt-1 hidden text-sm md:block ${
+                isDark ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
+              {current.subtitle}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <button
             onClick={toggleTheme}
-            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+            className={`rounded-2xl px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
               isDark
                 ? "border border-[#263b67] bg-[#111f3c] text-slate-100 hover:bg-[#16284a]"
                 : "border border-slate-300 bg-white text-slate-900 hover:bg-slate-100"
             }`}
           >
-            {isDark ? "Light Mode" : "Dark Mode"}
+            {isDark ? "Light" : "Dark"}
           </button>
 
           <div
-            className={`hidden rounded-2xl px-3 py-2 md:block ${
+            className={`hidden rounded-2xl px-3 py-2 lg:block ${
               isDark
                 ? "border border-emerald-400/20 bg-emerald-400/10"
                 : "border border-emerald-200 bg-emerald-50"
@@ -101,7 +115,7 @@ export default function Navbar() {
           </div>
 
           <div
-            className={`rounded-2xl px-4 py-2 ${
+            className={`hidden rounded-2xl px-4 py-2 sm:block ${
               isDark
                 ? "border border-[#263b67] bg-[#111f3c]"
                 : "border border-slate-300 bg-white"
@@ -125,7 +139,7 @@ export default function Navbar() {
 
           <button
             onClick={logout}
-            className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400"
+            className="rounded-2xl bg-red-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-400 sm:px-4 sm:text-sm"
           >
             Logout
           </button>
