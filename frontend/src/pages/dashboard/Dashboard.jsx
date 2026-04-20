@@ -212,10 +212,28 @@ export default function Dashboard() {
                       <Pill tone={drone.is_online ? "success" : "neutral"}>
                         {drone.is_online ? "Online" : "Offline"}
                       </Pill>
+
                       <Pill tone="info">{drone.status || "UNKNOWN"}</Pill>
+
                       <Pill tone={drone.is_critical ? "danger" : "neutral"}>
                         Battery {drone.battery ?? 0}%
                       </Pill>
+
+                      <Pill
+                        tone={
+                          drone.pickup_status === "pickup_in_progress"
+                            ? "warning"
+                            : drone.pickup_status === "pickup_completed"
+                            ? "success"
+                            : "neutral"
+                        }
+                      >
+                        Pickup: {drone.pickup_status || "idle"}
+                      </Pill>
+
+                      {drone.red_light_on && (
+                        <Pill tone="danger">Red Safety Light ON</Pill>
+                      )}
                     </div>
                   </div>
                 </div>

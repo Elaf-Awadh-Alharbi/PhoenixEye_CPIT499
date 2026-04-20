@@ -35,6 +35,12 @@ router.get(
   droneController.getLiveDrones
 );
 
+router.patch(
+  "/:id/pickup-status",
+  verifyToken,
+  droneController.updatePickupStatus
+);
+
 module.exports = router;
 
 
