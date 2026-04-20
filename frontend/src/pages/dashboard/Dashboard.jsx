@@ -60,23 +60,23 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-[#22365f] bg-gradient-to-r from-[#0f1b34] to-[#122447] p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.22em] text-[#38bdf8]">
+    <div className="space-y-5 sm:space-y-6 xl:space-y-8">
+      <section className="rounded-3xl border border-[#22365f] bg-gradient-to-r from-[#0f1b34] to-[#122447] p-4 sm:p-5 lg:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#38bdf8] sm:text-sm">
               Operations Overview
             </p>
-            <h2 className="mt-2 text-3xl font-bold text-white">
+            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
               Phoenix Eye Control Center
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Monitor incident activity, drone availability, and response readiness
-              across the system from one unified command dashboard.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              Monitor incident activity, drone availability, and response
+              readiness across the system from one unified command dashboard.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[420px]">
             <QuickStat label="Pending" value={statusMap.PENDING} tone="warning" />
             <QuickStat label="Verified" value={statusMap.VERIFIED} tone="success" />
             <QuickStat label="Assigned" value={statusMap.ASSIGNED} tone="info" />
@@ -85,7 +85,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           title="Total Reports"
           value={data?.totalReports ?? 0}
@@ -112,16 +112,32 @@ export default function Dashboard() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr]">
         <Panel
           title="Report Status Distribution"
           subtitle="Live breakdown of incident workflow states."
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <StatusCard label="Pending Review" value={statusMap.PENDING} color="yellow" />
-            <StatusCard label="Verified" value={statusMap.VERIFIED} color="green" />
-            <StatusCard label="Assigned" value={statusMap.ASSIGNED} color="blue" />
-            <StatusCard label="Removed" value={statusMap.REMOVED} color="red" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <StatusCard
+              label="Pending Review"
+              value={statusMap.PENDING}
+              color="yellow"
+            />
+            <StatusCard
+              label="Verified"
+              value={statusMap.VERIFIED}
+              color="green"
+            />
+            <StatusCard
+              label="Assigned"
+              value={statusMap.ASSIGNED}
+              color="blue"
+            />
+            <StatusCard
+              label="Removed"
+              value={statusMap.REMOVED}
+              color="red"
+            />
           </div>
         </Panel>
 
@@ -161,7 +177,7 @@ export default function Dashboard() {
         </Panel>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <Panel
           title="Live Drone Activity"
           subtitle="Real-time snapshot of fleet connectivity and power state."
@@ -176,25 +192,31 @@ export default function Dashboard() {
               {liveDrones.slice(0, 6).map((drone) => (
                 <div
                   key={drone.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-[#22365f] bg-[#111d37] px-4 py-4 md:flex-row md:items-center md:justify-between"
+                  className="rounded-2xl border border-[#22365f] bg-[#111d37] px-4 py-4"
                 >
-                  <div>
-                    <p className="font-semibold text-white">{drone.name}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {drone.last_seen_at
-                        ? `Last seen ${new Date(drone.last_seen_at).toLocaleString()}`
-                        : "No heartbeat received yet"}
-                    </p>
-                  </div>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-white">
+                        {drone.name}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">
+                        {drone.last_seen_at
+                          ? `Last seen ${new Date(
+                              drone.last_seen_at
+                            ).toLocaleString()}`
+                          : "No heartbeat received yet"}
+                      </p>
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Pill tone={drone.is_online ? "success" : "neutral"}>
-                      {drone.is_online ? "Online" : "Offline"}
-                    </Pill>
-                    <Pill tone="info">{drone.status || "UNKNOWN"}</Pill>
-                    <Pill tone={drone.is_critical ? "danger" : "neutral"}>
-                      Battery {drone.battery ?? 0}%
-                    </Pill>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Pill tone={drone.is_online ? "success" : "neutral"}>
+                        {drone.is_online ? "Online" : "Offline"}
+                      </Pill>
+                      <Pill tone="info">{drone.status || "UNKNOWN"}</Pill>
+                      <Pill tone={drone.is_critical ? "danger" : "neutral"}>
+                        Battery {drone.battery ?? 0}%
+                      </Pill>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -224,8 +246,8 @@ export default function Dashboard() {
                     key={report.id}
                     className="rounded-2xl border border-[#22365f] bg-[#111d37] px-4 py-4"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
                         <p className="font-medium text-white">
                           Incident #{report.id.slice(0, 8)}
                         </p>
@@ -235,19 +257,21 @@ export default function Dashboard() {
                         </p>
                       </div>
 
-                      <Pill
-                        tone={
-                          report.status === "PENDING"
-                            ? "warning"
-                            : report.status === "VERIFIED"
-                            ? "success"
-                            : report.status === "ASSIGNED"
-                            ? "info"
-                            : "danger"
-                        }
-                      >
-                        {report.status}
-                      </Pill>
+                      <div className="sm:shrink-0">
+                        <Pill
+                          tone={
+                            report.status === "PENDING"
+                              ? "warning"
+                              : report.status === "VERIFIED"
+                              ? "success"
+                              : report.status === "ASSIGNED"
+                              ? "info"
+                              : "danger"
+                          }
+                        >
+                          {report.status}
+                        </Pill>
+                      </div>
                     </div>
 
                     <p className="mt-3 text-xs text-slate-500">{dateLabel}</p>
@@ -272,7 +296,7 @@ function KpiCard({ title, value, subtitle, accent = "emerald" }) {
 
   return (
     <div
-      className={`rounded-3xl border bg-gradient-to-br p-5 shadow-[0_16px_40px_rgba(2,8,23,0.35)] ${accents[accent]}`}
+      className={`rounded-3xl border bg-gradient-to-br p-4 shadow-[0_16px_40px_rgba(2,8,23,0.35)] sm:p-5 ${accents[accent]}`}
     >
       <p className="text-sm text-slate-400">{title}</p>
       <p className="mt-3 text-3xl font-bold text-white">{value}</p>
@@ -290,18 +314,20 @@ function QuickStat({ label, value, tone = "info" }) {
   };
 
   return (
-    <div className={`rounded-2xl border px-4 py-3 ${tones[tone]}`}>
-      <p className="text-xs uppercase tracking-wide">{label}</p>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
+    <div className={`rounded-2xl border px-3 py-3 sm:px-4 ${tones[tone]}`}>
+      <p className="text-[11px] uppercase tracking-wide sm:text-xs">{label}</p>
+      <p className="mt-2 text-xl font-bold sm:text-2xl">{value}</p>
     </div>
   );
 }
 
 function Panel({ title, subtitle, children }) {
   return (
-    <div className="rounded-3xl border border-[#22365f] bg-[#0f1b34] p-5 shadow-[0_16px_40px_rgba(2,8,23,0.35)]">
+    <div className="rounded-3xl border border-[#22365f] bg-[#0f1b34] p-4 shadow-[0_16px_40px_rgba(2,8,23,0.35)] sm:p-5">
       <div className="mb-5">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-base font-semibold text-white sm:text-lg">
+          {title}
+        </h3>
         <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
       </div>
       {children}
@@ -336,7 +362,7 @@ function AlertRow({ title, text, tone = "neutral" }) {
   return (
     <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
       <p className="font-medium text-white">{title}</p>
-      <p className="mt-1 text-sm text-slate-300">{text}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-300">{text}</p>
     </div>
   );
 }
@@ -351,7 +377,9 @@ function Pill({ children, tone = "neutral" }) {
   };
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${tones[tone]}`}>
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-medium ${tones[tone]}`}
+    >
       {children}
     </span>
   );
@@ -368,18 +396,18 @@ function EmptyState({ title, text }) {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8 animate-pulse">
-      <div className="h-36 rounded-3xl bg-[#101d38]" />
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-5 animate-pulse sm:space-y-6 xl:space-y-8">
+      <div className="h-40 rounded-3xl bg-[#101d38]" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="h-32 rounded-3xl bg-[#101d38]" />
         ))}
       </div>
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <div className="h-72 rounded-3xl bg-[#101d38]" />
         <div className="h-72 rounded-3xl bg-[#101d38]" />
       </div>
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <div className="h-80 rounded-3xl bg-[#101d38]" />
         <div className="h-80 rounded-3xl bg-[#101d38]" />
       </div>
