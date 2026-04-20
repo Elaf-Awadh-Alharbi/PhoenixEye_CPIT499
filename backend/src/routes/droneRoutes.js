@@ -10,6 +10,9 @@ const { verifyToken } = require("../middleware/authMiddleware");
 const droneController = require("../controllers/droneController");
 const { uploadReportImage } = require("../middleware/uploadMiddleware");
 
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
+
 // تسجيل درون
 router.post("/register", registerDrone);
 
