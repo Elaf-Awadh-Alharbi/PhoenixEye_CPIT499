@@ -1,5 +1,8 @@
 const Drone = require("../models/Drone");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const FormData = require("form-data");
+const axios = require("axios");
 
 exports.testDrone = async (req, res) => {
   try {
@@ -147,6 +150,53 @@ exports.updatePickupStatus = async (req, res) => {
   }
 };
 
+exports.analyzeDroneVideo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Video file is required" });
+    }
+
+    const form = new FormData();
+    form.append("file", fs.createReadStream(req.file.path), {
+      filename: req.file.originalname || "drone-video.mp4",
+      contentType: req.file.mimetype || "video/mp4",
+    });
+
+    const aiResponse = await axios.post(
+      "https://phoenixeye-cpit499-1.onrender.com/predict-video",
+      form,
+      {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
+      }
+    );
+
+    fs.unlink(req.file.path, (err) => {
+      if (err) {
+        console.error("Failed to delete temp video:", err.message);
+      }
+    });
+
+    return res.json({
+      message: "Video analyzed successfully",
+      result: aiResponse.data,
+    });
+  } catch (error) {
+    if (req.file?.path) {
+      fs.unlink(req.file.path, () => {});
+    }
+
+    console.error(
+      "analyzeDroneVideo error:",
+      error?.response?.data || error.message
+    );
+
+    return res.status(500).json({
+      error: "Video analysis failed",
+      details: error?.response?.data || error.message,
+    });
+  }
+};
 
 
 

@@ -41,6 +41,14 @@ router.patch(
   droneController.updatePickupStatus
 );
 
+router.post(
+  "/video-detect",
+  verifyDroneToken,
+  upload.single("video"),
+  droneController.analyzeDroneVideo
+);
+
+
 module.exports = router;
 
 
