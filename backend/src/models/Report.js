@@ -34,6 +34,11 @@ const Report = sequelize.define(
       allowNull: false,
     },
 
+    citizen_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
     ai_total_detections: {
       type: DataTypes.INTEGER,
       allowNull: true,
